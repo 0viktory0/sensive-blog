@@ -5,16 +5,17 @@ from django.db.models import Count
 
 
 class PostQuerySet(models.QuerySet):
-    def year(self, year):
+
+    def get_posts_by_year(self, year):
         posts_at_year = self.filter(published_at__year=year).order_by('published_at')
         return posts_at_year
-
 
     def popular(self):
         popular_posts = self.annotate(post_likes=Count('likes')).order_by('-post_likes')
         return popular_posts
 
     def fetch_with_comments_count(self):
+
         """
         Эта функция предпочтительнее, потому, что помогает избежать повышенного количества
         запросов к БД при использовании нескольих методов annotate()
@@ -31,9 +32,11 @@ class PostQuerySet(models.QuerySet):
 
         return list(self)
 
+
 class TagQuerySet(models.QuerySet):
+
     def popular(self):
-        popular_tags = self.annotate(tag_posts=Count('posts')).order_by('-tag_posts')
+        popular_tags = self.annotate(posts_number=Count('posts')).order_by('-posts_number')
         return popular_tags
 
 
@@ -43,7 +46,6 @@ class Post(models.Model):
     slug = models.SlugField('Название в виде url', max_length=200)
     image = models.ImageField('Картинка')
     published_at = models.DateTimeField('Дата и время публикации')
-    objects = PostQuerySet.as_manager()
 
     author = models.ForeignKey(
         User,
@@ -59,6 +61,8 @@ class Post(models.Model):
         'Tag',
         related_name='posts',
         verbose_name='Теги')
+
+    objects = PostQuerySet.as_manager()
 
     def __str__(self):
         return self.title
